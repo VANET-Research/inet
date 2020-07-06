@@ -21,22 +21,23 @@ Define_Module(SettableLinearClock);
 
 void SettableLinearClock::initialize()
 {
-    origin = par("origin");
+    origin.simtime = par("origin");
     driftRate = par("driftRate").doubleValue() / 1e6;
 }
 
 clocktime_t SettableLinearClock::getClockTime() const
 {
     simtime_t t = simTime();
-    return originClock + ClockTime::from((t-origin) / (1 + driftRate));
+    return origin.clocktime + ClockTime::from((t-origin.simtime) / (1 + driftRate));
 }
 
 void SettableLinearClock::scheduleClockEvent(clocktime_t t, cMessage *msg)
 {
 //TODO remove old items from arrivalTime
-    simtime_t st = origin + (t - originClock).asSimTime() * (1 + driftRate);
+    simtime_t st = origin.simtime + (t - origin.clocktime).asSimTime() * (1 + driftRate);
     getTargetModule()->scheduleAt(st, msg);
     arrivalTimes[msg].clocktime = t;
+    arrivalTimes[msg].simtime = st;
 }
 
 cMessage *SettableLinearClock::cancelClockEvent(cMessage *msg)
@@ -68,7 +69,7 @@ void SettableLinearClock::rescheduleTimers()
             it = arrivalTimes.erase(it);
         else {
             cMessage * msg = it->first;
-            simtime_t st = origin + (it->second.clocktime - originClock).asSimTime() * (1 + driftRate);
+            simtime_t st = origin.simtime + (it->second.clocktime - origin.clocktime).asSimTime() * (1 + driftRate);
             if (st < now)
                 st = now;
             getTargetModule()->cancelEvent(msg);
@@ -87,8 +88,8 @@ void SettableLinearClock::setDriftRate(double newDriftRate)
 
 void SettableLinearClock::setClockTime(clocktime_t t)
 {
-    origin = simTime();
-    originClock = t;
+    origin.simtime = simTime();
+    origin.clocktime = t;
     rescheduleTimers();
 }
 

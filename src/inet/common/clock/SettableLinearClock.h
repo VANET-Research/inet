@@ -30,8 +30,7 @@ class INET_API SettableLinearClock : public ClockBase, public IClock
         simtime_t simtime;
         clocktime_t clocktime;
     };
-    simtime_t origin;
-    clocktime_t originClock;
+    TimePair origin;
     double driftRate;
     std::map<cMessage*, TimePair> arrivalTimes;
 
@@ -42,6 +41,7 @@ class INET_API SettableLinearClock : public ClockBase, public IClock
 
   public:
     virtual void initialize() override;
+    virtual void handleParameterChange(const char *parname) override;
 
     /**
      * Return the current time.
@@ -68,6 +68,7 @@ class INET_API SettableLinearClock : public ClockBase, public IClock
     virtual void setClockTime(clocktime_t t);
 };
 
+//vektorra átír, handleparamchange, udpbasicapp
 } // namespace inet
 
 #endif // ifndef __INET_SettableLinearClock_H
