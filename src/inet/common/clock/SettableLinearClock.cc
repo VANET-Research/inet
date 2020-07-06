@@ -21,7 +21,8 @@ Define_Module(SettableLinearClock);
 
 void SettableLinearClock::initialize()
 {
-    origin.simtime = par("origin");
+    origin.simtime = simTime();
+    origin.clocktime = par("origin");
     driftRate = par("driftRate").doubleValue() / 1e6;
 }
 
@@ -33,48 +34,69 @@ clocktime_t SettableLinearClock::getClockTime() const
 
 void SettableLinearClock::scheduleClockEvent(clocktime_t t, cMessage *msg)
 {
-//TODO remove old items from arrivalTime
-    simtime_t st = origin.simtime + (t - origin.clocktime).asSimTime() * (1 + driftRate);
-    getTargetModule()->scheduleAt(st, msg);
-    arrivalTimes[msg].clocktime = t;
-    arrivalTimes[msg].simtime = st;
+    simtime_t now = simTime();
+    for (auto it = timers.begin(); it != timers.end(); ) {
+        if (it->arrivalTime.simtime <= now)
+            it = timers.erase(it);
+        else {
+            ASSERT(it->msg != msg);
+            ++it;
+        }
+    }
+    Timer timer;
+    timer.msg = msg;
+    timer.arrivalTime.clocktime = t;
+    timer.arrivalTime.simtime = origin.simtime + (t - origin.clocktime).asSimTime() * (1 + driftRate);
+    getTargetModule()->scheduleAt(timer.arrivalTime.simtime, msg);
+    timers.push_back(timer);
 }
 
 cMessage *SettableLinearClock::cancelClockEvent(cMessage *msg)
 {
-    arrivalTimes.erase(msg);
+    simtime_t now = simTime();
+    for (auto it = timers.begin(); it != timers.end(); ) {
+        if (it->arrivalTime.simtime <= now || it->msg == msg)
+            it = timers.erase(it);
+        else
+            ++it;
+    }
     return getTargetModule()->cancelEvent(msg);
 }
 
 clocktime_t SettableLinearClock::getArrivalClockTime(cMessage *msg) const
 {
     ASSERT(msg->isScheduled());
-    return arrivalTimes.at(msg).clocktime;
+    for (auto timer : timers) {
+        if (timer.msg == msg)
+            return timer.arrivalTime.clocktime;
+    }
+    throw cRuntimeError("Message not found in Timer vector");
 }
 
 void SettableLinearClock::purgeTimers()
 {
     simtime_t now = simTime();
-    for (auto it = arrivalTimes.begin(); it != arrivalTimes.end(); ) {
-        if (it->second.simtime <= now)
-            it = arrivalTimes.erase(it);
+    for (auto it = timers.begin(); it != timers.end(); ) {
+        if (it->arrivalTime.simtime <= now)
+            it = timers.erase(it);
+        else
+            ++it;
     }
 }
 
 void SettableLinearClock::rescheduleTimers()
 {
     simtime_t now = simTime();
-    for (auto it = arrivalTimes.begin(); it != arrivalTimes.end(); ) {
-        if (it->second.simtime <= now)
-            it = arrivalTimes.erase(it);
+    for (auto it = timers.begin(); it != timers.end(); ) {
+        if (it->arrivalTime.simtime <= now)
+            it = timers.erase(it);
         else {
-            cMessage * msg = it->first;
-            simtime_t st = origin.simtime + (it->second.clocktime - origin.clocktime).asSimTime() * (1 + driftRate);
+            simtime_t st = origin.simtime + (it->arrivalTime.clocktime - origin.clocktime).asSimTime() * (1 + driftRate);
             if (st < now)
                 st = now;
-            getTargetModule()->cancelEvent(msg);
-            getTargetModule()->scheduleAt(st, msg);
-            it->second.simtime = st;
+            getTargetModule()->cancelEvent(it->msg);
+            getTargetModule()->scheduleAt(st, it->msg);
+            it->arrivalTime.simtime = st;
             ++it;
         }
     }

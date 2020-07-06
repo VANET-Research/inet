@@ -30,9 +30,13 @@ class INET_API SettableLinearClock : public ClockBase, public IClock
         simtime_t simtime;
         clocktime_t clocktime;
     };
+    struct Timer {
+        cMessage *msg;
+        TimePair arrivalTime;
+    };
     TimePair origin;
     double driftRate;
-    std::map<cMessage*, TimePair> arrivalTimes;
+    std::vector<Timer> timers;
 
     //virtual simtime_t toSimTime(clocktime_t t) const override;
 
