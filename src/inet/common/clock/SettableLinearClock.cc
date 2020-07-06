@@ -22,8 +22,18 @@ Define_Module(SettableLinearClock);
 void SettableLinearClock::initialize()
 {
     origin.simtime = simTime();
-    origin.clocktime = par("origin");
-    driftRate = par("driftRate").doubleValue() / 1e6;
+    origin.clocktime = ClockTime::from(origin.simtime);
+    driftRate = 0.0;
+}
+
+void SettableLinearClock::handleParameterChange(const char *name)
+{
+    if (name == nullptr || !strcmp(name, "origin")) {
+        setClockTime(par("origin"));
+    }
+    if (name == nullptr || !strcmp(name, "driftRate")) {
+        setDriftRate(par("driftRate").doubleValue() / 1e6);
+    }
 }
 
 clocktime_t SettableLinearClock::getClockTime() const
