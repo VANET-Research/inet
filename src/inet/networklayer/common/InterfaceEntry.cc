@@ -96,6 +96,8 @@ void InterfaceEntry::initialize(int stage)
 {
     if (stage == INITSTAGE_LOCAL) {
         upperLayerOut = gate("upperLayerOut");
+        const char *protocolName = par("protocol");
+        protocol = Protocol::getProtocol(protocolName);
         consumer = findConnectedModule<IPassivePacketSink>(upperLayerOut);
         setInterfaceName(utils::stripnonalnum(getFullName()).c_str());
         WATCH(mtu);
@@ -115,10 +117,6 @@ void InterfaceEntry::initialize(int stage)
         }
     }
     else if (stage == INITSTAGE_NETWORK_INTERFACE_CONFIGURATION) {
-        if (hasPar("protocol")) {
-            const char *protocolName = par("protocol");
-            protocol = Protocol::getProtocol(protocolName);
-        }
         if (hasPar("address")) {
             const char *address = par("address");
             if (!strcmp(address, "auto")) {
