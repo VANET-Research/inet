@@ -38,7 +38,7 @@ UdpBasicApp::~UdpBasicApp()
 
 void UdpBasicApp::initialize(int stage)
 {
-    ApplicationBase::initialize(stage);
+    ClockUsingModuleMixin::initialize(stage);
 
     if (stage == INITSTAGE_LOCAL) {
         numSent = 0;
@@ -52,7 +52,7 @@ void UdpBasicApp::initialize(int stage)
         stopTime = par("stopTime");
         packetName = par("packetName");
         dontFragment = par("dontFragment");
-        if (stopTime >= SIMTIME_ZERO && stopTime < startTime)
+        if (stopTime >= CLOCKTIME_ZERO && stopTime < startTime)
             throw cRuntimeError("Invalid startTime/stopTime parameters");
         selfMsg = new cMessage("sendTimer");
     }
@@ -152,9 +152,9 @@ void UdpBasicApp::processStart()
         processSend();
     }
     else {
-        if (stopTime >= SIMTIME_ZERO) {
+        if (stopTime >= CLOCKTIME_ZERO) {
             selfMsg->setKind(STOP);
-            scheduleAt(stopTime, selfMsg);
+            scheduleClockEvent(stopTime, selfMsg);
         }
     }
 }
@@ -162,14 +162,14 @@ void UdpBasicApp::processStart()
 void UdpBasicApp::processSend()
 {
     sendPacket();
-    simtime_t d = simTime() + par("sendInterval");
-    if (stopTime < SIMTIME_ZERO || d < stopTime) {
+    clocktime_t d = getClockTime() + par("sendInterval");
+    if (stopTime < CLOCKTIME_ZERO || d < stopTime) {
         selfMsg->setKind(SEND);
-        scheduleAt(d, selfMsg);
+        scheduleClockEvent(d, selfMsg);
     }
     else {
         selfMsg->setKind(STOP);
-        scheduleAt(stopTime, selfMsg);
+        scheduleClockEvent(stopTime, selfMsg);
     }
 }
 
@@ -240,10 +240,10 @@ void UdpBasicApp::processPacket(Packet *pk)
 
 void UdpBasicApp::handleStartOperation(LifecycleOperation *operation)
 {
-    simtime_t start = std::max(startTime, simTime());
-    if ((stopTime < SIMTIME_ZERO) || (start < stopTime) || (start == stopTime && startTime == stopTime)) {
+    clocktime_t start = std::max(startTime, getClockTime());
+    if ((stopTime < CLOCKTIME_ZERO) || (start < stopTime) || (start == stopTime && startTime == stopTime)) {
         selfMsg->setKind(START);
-        scheduleAt(start, selfMsg);
+        scheduleClockEvent(start, selfMsg);
     }
 }
 
@@ -256,7 +256,7 @@ void UdpBasicApp::handleStopOperation(LifecycleOperation *operation)
 
 void UdpBasicApp::handleCrashOperation(LifecycleOperation *operation)
 {
-    cancelEvent(selfMsg);
+    cancelClockEvent(selfMsg);
     socket.destroy();         //TODO  in real operating systems, program crash detected by OS and OS closes sockets of crashed programs.
 }
 

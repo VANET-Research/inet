@@ -24,6 +24,7 @@
 #include "inet/common/INETDefs.h"
 
 #include "inet/applications/base/ApplicationBase.h"
+#include "inet/common/base/ClockUsingModuleMixin.h"
 #include "inet/transportlayer/contract/udp/UdpSocket.h"
 
 namespace inet {
@@ -31,7 +32,7 @@ namespace inet {
 /**
  * UDP application. See NED for more info.
  */
-class INET_API UdpBasicApp : public ApplicationBase, public UdpSocket::ICallback
+class INET_API UdpBasicApp : public ClockUsingModuleMixin<ApplicationBase>, public UdpSocket::ICallback
 {
   protected:
     enum SelfMsgKinds { START = 1, SEND, STOP };
@@ -40,8 +41,8 @@ class INET_API UdpBasicApp : public ApplicationBase, public UdpSocket::ICallback
     std::vector<L3Address> destAddresses;
     std::vector<std::string> destAddressStr;
     int localPort = -1, destPort = -1;
-    simtime_t startTime;
-    simtime_t stopTime;
+    clocktime_t startTime;
+    clocktime_t stopTime;
     bool dontFragment = false;
     const char *packetName = nullptr;
 
