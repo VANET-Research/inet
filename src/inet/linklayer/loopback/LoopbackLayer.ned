@@ -19,30 +19,17 @@
 
 package inet.linklayer.loopback;
 
-import inet.linklayer.contract.ILoopbackInterface;
-import inet.networklayer.common.InterfaceEntry;
-
 //
-// Loopback interface. Complements the ~Loopback module.
+// Loopback interface module implementation.
 //
-module LoopbackInterface extends InterfaceEntry like ILoopbackInterface
+// @see ~LoopbackInterface
+//
+simple LoopbackLayer
 {
-    parameters:
-        @class(InterfaceEntry);
-        @display("i=block/ifcard;bgl=53");
-        string interfaceTableModule;
-        string protocol = default("loopback");
-        *.interfaceTableModule = default(absPath(interfaceTableModule));
     gates:
         input upperLayerIn;
         output upperLayerOut;
-    submodules:
-        lo: Loopback {
-            parameters:
-                @display("p=250,200");
-        }
-    connections:
-        upperLayerIn --> { @display("m=n"); } --> lo.upperLayerIn;
-        lo.upperLayerOut --> { @display("m=n"); } --> upperLayerOut;
+        input lowerLayerIn;
+        output lowerLayerOut;
 }
 

@@ -116,6 +116,7 @@ const Protocol Protocol::isis("isis", "IS-IS");
 const Protocol Protocol::l2isis("l2isis", "L2 IS-IS");
 const Protocol Protocol::lldp("lldp", "LLDP", Protocol::NetworkLayer);
 const Protocol Protocol::lmac("lmac", "L-MAC");
+const Protocol Protocol::loopback("loopback", "LoopBack");
 const Protocol Protocol::manet("manet", "MANET");
 const Protocol Protocol::mobileipv6("mobileipv6", "Mobile IPv6");
 const Protocol Protocol::mpls("mpls", "MPLS");

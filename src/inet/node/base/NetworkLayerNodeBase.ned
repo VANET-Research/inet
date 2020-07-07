@@ -61,6 +61,9 @@ module NetworkLayerNodeBase extends LinkLayerNodeBase
         generic.ifIn <-- nl.out++ if exists(generic);
         generic.ifOut --> nl.in++ if exists(generic);
 
+        loLayer.upperLayerOut --> nl.in++;
+        nl.out++ --> loLayer.upperLayerIn;
+
         ethernet.upperLayerOut --> nl.in++;
         nl.out++ --> ethernet.upperLayerIn;
 
