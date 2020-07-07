@@ -54,10 +54,11 @@ void SettableLinearClock::scheduleClockEvent(clocktime_t t, cMessage *msg)
         }
     }
     Timer timer;
+    timer.module = getTargetModule();
     timer.msg = msg;
     timer.arrivalTime.clocktime = t;
     timer.arrivalTime.simtime = origin.simtime + (t - origin.clocktime).asSimTime() * (1 + driftRate);
-    getTargetModule()->scheduleAt(timer.arrivalTime.simtime, msg);
+    timer.module->scheduleAt(timer.arrivalTime.simtime, msg);
     timers.push_back(timer);
 }
 
@@ -104,9 +105,12 @@ void SettableLinearClock::rescheduleTimers()
             simtime_t st = origin.simtime + (it->arrivalTime.clocktime - origin.clocktime).asSimTime() * (1 + driftRate);
             if (st < now)
                 st = now;
-            getTargetModule()->cancelEvent(it->msg);
-            getTargetModule()->scheduleAt(st, it->msg);
-            it->arrivalTime.simtime = st;
+            {
+                cContextSwitcher tmp(it->module);
+                it->module->cancelEvent(it->msg);
+                it->module->scheduleAt(st, it->msg);
+                it->arrivalTime.simtime = st;
+            }
             ++it;
         }
     }

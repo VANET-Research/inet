@@ -23,8 +23,7 @@ import inet.common.clock.contract.IClock;
 simple SettableLinearClock like IClock
 {
     parameters:
-        double origin @unit(s) = default(0s); // the simulation time when the clock's value is zero
-        //TODO rename to: offset? startTime? timeShift? 
+        double origin @unit(s) = default(0s); // set the clock time to this value at the initialize and at the parameter change
         double driftRate @unit(ppm) = default(0ppm); // clock precision, expressed as a ratio in parts per million
         @display("i=block/timer");
 }

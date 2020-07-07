@@ -31,6 +31,7 @@ class INET_API SettableLinearClock : public ClockBase, public IClock
         clocktime_t clocktime;
     };
     struct Timer {
+        cSimpleModule *module;
         cMessage *msg;
         TimePair arrivalTime;
     };
