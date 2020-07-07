@@ -959,6 +959,7 @@ void Ipv6::sendDatagramToOutput(Packet *packet, const InterfaceEntry *destIE, co
     packet->addTagIfAbsent<MacAddressReq>()->setDestAddress(macAddr);
     packet->removeTagIfPresent<DispatchProtocolReq>();
     packet->addTagIfAbsent<InterfaceReq>()->setInterfaceId(destIE->getInterfaceId());
+    packet->addTagIfAbsent<DispatchProtocolReq>()->setProtocol(destIE->getProtocol());
     packet->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::ipv6);
     packet->addTagIfAbsent<DispatchProtocolInd>()->setProtocol(&Protocol::ipv6);
     send(packet, "queueOut");
