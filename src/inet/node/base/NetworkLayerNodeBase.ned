@@ -63,5 +63,8 @@ module NetworkLayerNodeBase extends LinkLayerNodeBase
 
         ethernet.upperLayerOut --> nl.in++;
         nl.out++ --> ethernet.upperLayerIn;
+
+        pppLayer.upperLayerOut --> nl.in++;
+        nl.out++ --> pppLayer.upperLayerIn;
 }
 

@@ -25,6 +25,7 @@ import inet.linklayer.contract.IPppInterface;
 import inet.linklayer.contract.ITunnelInterface;
 import inet.linklayer.contract.IVlanInterface;
 import inet.linklayer.contract.IWirelessInterface;
+import inet.linklayer.ppp.PppLayer;
 import inet.networklayer.common.InterfaceTable;
 import inet.protocol.ethernet.SimpleEthernetLayer;
 
@@ -71,6 +72,10 @@ module LinkLayerNodeBase extends NodeBase
             parameters:
                 @display("p=375,526");
         }
+        pppLayer: PppLayer {
+            parameters:
+                @display("p=575,526");
+        }
         lo[numLoInterfaces]: <default("LoopbackInterface")> like ILoopbackInterface {
             parameters:
                 @display("p=750,676,row,150");
@@ -100,6 +105,8 @@ module LinkLayerNodeBase extends NodeBase
     connections allowunconnected:
         ethernet.lowerLayerOut --> li.in++;
         li.out++ --> ethernet.lowerLayerIn;
+        pppLayer.lowerLayerOut --> li.in++;
+        li.out++ --> pppLayer.lowerLayerIn;
 
         for i=0..sizeof(radioIn)-1 {
             radioIn[i] --> { @display("m=s"); } --> wlan[i].radioIn;

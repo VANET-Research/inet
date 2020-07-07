@@ -56,8 +56,6 @@ class INET_API Ppp : public MacProtocolBase
 
   protected:
     virtual void startTransmitting();
-    virtual void encapsulate(Packet *msg);
-    virtual void decapsulate(Packet *packet);
     virtual void refreshDisplay() const override;
     virtual void refreshOutGateConnection(bool connected);
 

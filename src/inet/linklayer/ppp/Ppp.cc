@@ -161,7 +161,6 @@ void Ppp::startTransmitting()
 {
     // if there's any control info, remove it; then encapsulate the packet
     Packet *pppFrame = currentTxFrame->dup();
-    encapsulate(pppFrame);
 
     // send
     EV_INFO << "Transmission of " << pppFrame << " started.\n";
@@ -255,10 +254,14 @@ void Ppp::handleLowerPacket(Packet *packet)
         // pass up payload
         const auto& pppHeader = packet->peekAtFront<PppHeader>();
         const auto& pppTrailer = packet->peekAtBack<PppTrailer>(PPP_TRAILER_LENGTH);
-        if (pppHeader == nullptr || pppTrailer == nullptr)
-            throw cRuntimeError("Invalid PPP packet: PPP header or Trailer is missing");
         emit(rxPkOkSignal, packet);
-        decapsulate(packet);
+
+        //TODO check CRC
+        (void)pppHeader; (void)pppTrailer;
+
+        packet->addTagIfAbsent<InterfaceInd>()->setInterfaceId(interfaceEntry->getInterfaceId());
+        packet->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::ppp);
+        packet->addTagIfAbsent<DispatchProtocolReq>()->setProtocol(&Protocol::ppp);
         numRcvdOK++;
         emit(packetSentToUpperSignal, packet);
         EV_INFO << "Sending " << packet << " to upper layer.\n";
@@ -317,30 +320,6 @@ void Ppp::refreshDisplay() const
     else
         color = "#707070";
     getDisplayString().setTagArg("i", 1, color);
-}
-
-void Ppp::encapsulate(Packet *packet)
-{
-    auto pppHeader = makeShared<PppHeader>();
-    pppHeader->setProtocol(ProtocolGroup::pppprotocol.getProtocolNumber(packet->getTag<PacketProtocolTag>()->getProtocol()));
-    packet->insertAtFront(pppHeader);
-    auto pppTrailer = makeShared<PppTrailer>();
-    packet->insertAtBack(pppTrailer);
-    packet->addTagIfAbsent<PacketProtocolTag>()->setProtocol(&Protocol::ppp);
-}
-
-void Ppp::decapsulate(Packet *packet)
-{
-    const auto& pppHeader = packet->popAtFront<PppHeader>();
-    const auto& pppTrailer = packet->popAtBack<PppTrailer>(PPP_TRAILER_LENGTH);
-    if (pppHeader == nullptr || pppTrailer == nullptr)
-        throw cRuntimeError("Invalid PPP packet: PPP header or Trailer is missing");
-    //TODO check CRC
-    packet->addTagIfAbsent<InterfaceInd>()->setInterfaceId(interfaceEntry->getInterfaceId());
-
-    auto payloadProtocol = ProtocolGroup::pppprotocol.getProtocol(pppHeader->getProtocol());
-    packet->addTagIfAbsent<DispatchProtocolReq>()->setProtocol(payloadProtocol);
-    packet->addTagIfAbsent<PacketProtocolTag>()->setProtocol(payloadProtocol);
 }
 
 void Ppp::handleStopOperation(LifecycleOperation *operation)
